@@ -1,4 +1,4 @@
-import React, { FC, createContext, useCallback, useLayoutEffect, useRef, useState } from 'react'
+import React, { FC, createContext, useLayoutEffect, useRef, useState } from 'react'
 import styled, { css } from 'styled-components'
 
 import { Theme, useTheme } from '../../hooks/useTheme'
@@ -9,6 +9,7 @@ import { useKeyboardNavigation } from './useKeyboardNavigation'
 
 type Props = {
   id: string
+  isActive: boolean
   triggerRect: Rect
   scrollable: boolean
   children: React.ReactNode
@@ -26,6 +27,7 @@ export const DropdownContentInnerContext = createContext<DropdownContentInnerCon
 
 export const DropdownContentInner: FC<Props> = ({
   id,
+  isActive,
   triggerRect,
   scrollable,
   children,
@@ -33,7 +35,6 @@ export const DropdownContentInner: FC<Props> = ({
   controllable,
 }) => {
   const theme = useTheme()
-  const [isActive, setIsActive] = useState(false)
   const [contentBox, setContentBox] = useState<ContentBoxStyle>({
     top: '0',
     left: '0',
@@ -60,33 +61,17 @@ export const DropdownContentInner: FC<Props> = ({
           },
         ),
       )
-      setIsActive(true)
     }
   }, [triggerRect])
 
-  const focusContent = useCallback(() => {
-    // delay for waiting to change the inner contents to visible
-    const firstTabbale = getFirstTabbable(wrapperRef)
-    if (firstTabbale) {
-      firstTabbale.focus()
-      return true
-    }
-    return false
-  }, [])
-
   useLayoutEffect(() => {
     if (isActive) {
-      // when the dropdwon content becomes active, focus a first tabbable element in it
-      setTimeout(() => {
-        // delay for waiting to change the inner contents to visible
-        if (!focusContent()) {
-          setTimeout(() => {
-            focusContent()
-          }, 100)
-        }
-      }, 30)
+      const firstTabbale = getFirstTabbable(wrapperRef)
+      if (firstTabbale) {
+        firstTabbale.focus()
+      }
     }
-  }, [isActive, focusContent])
+  }, [isActive])
 
   useKeyboardNavigation(wrapperRef)
 
@@ -121,7 +106,6 @@ const Wrapper = styled.div<{
     const { frame, zIndex } = themes
 
     return css`
-      visibility: hidden;
       z-index: ${zIndex.OVERLAP};
       position: absolute;
       top: ${contentBox.top};
@@ -144,8 +128,8 @@ const Wrapper = styled.div<{
           `
         : ''}
 
-      &.active {
-        visibility: visible;
+      &:not(.active) {
+        display: none;
       }
     `
   }}
