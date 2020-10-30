@@ -16,20 +16,6 @@ import { Rect, getFirstTabbable, isEventFromChild } from './dropdownHelper'
 import { usePortal } from '../../hooks/usePortal'
 import { useId } from '../../hooks/useId'
 
-type ClosingObserver = () => void
-class ClosingSubject {
-  private observers: ClosingObserver[] = []
-  add(observer: ClosingObserver) {
-    this.observers.push(observer)
-  }
-  remove(observer: ClosingObserver) {
-    this.observers = this.observers.filter((_observer) => _observer !== observer)
-  }
-  notify() {
-    this.observers.forEach((observer) => observer())
-  }
-}
-
 type Props = {
   children: ReactNode
 }
@@ -43,7 +29,6 @@ type DropdownContextType = {
   onClickCloser: () => void
   DropdownContentRoot: FC<{ children: ReactNode }>
   contentWrapperId: string
-  closingSubject: ClosingSubject | null
 }
 
 const initialRect = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -61,22 +46,26 @@ export const DropdownContext = createContext<DropdownContextType>({
   },
   DropdownContentRoot: () => null,
   contentWrapperId: '',
-  closingSubject: null,
 })
 
 export const Dropdown: FC<Props> = ({ children }) => {
   const [active, setActive] = useState(false)
   const [triggerRect, setTriggerRect] = useState<Rect>(initialRect)
 
-  const { rootTriggerRef, closingSubject: parentClosingSubject } = useContext(DropdownContext)
-  const { portalRoot, isChildPortal, PortalParentProvider } = usePortal()
+  const { rootTriggerRef } = useContext(DropdownContext)
+  const {
+    portalRoot,
+    isChildPortal,
+    PortalParentProvider,
+    notifyClose,
+    parentClosingSubject,
+  } = usePortal()
 
   const triggerElementRef = useRef<HTMLDivElement>(null)
   const contentWrapperId = useId()
-  const currentClosingSubject = new ClosingSubject()
 
   const close = useCallback(() => {
-    currentClosingSubject.notify()
+    notifyClose()
     setActive(false)
     // wait to re-render
     requestAnimationFrame(() => {
@@ -86,7 +75,7 @@ export const Dropdown: FC<Props> = ({ children }) => {
         trigger.focus()
       }
     })
-  }, [currentClosingSubject])
+  }, [notifyClose])
 
   useEffect(() => {
     if (!parentClosingSubject) {
@@ -137,7 +126,6 @@ export const Dropdown: FC<Props> = ({ children }) => {
           onClickCloser: close,
           DropdownContentRoot,
           contentWrapperId,
-          closingSubject: currentClosingSubject,
         }}
       >
         {children}

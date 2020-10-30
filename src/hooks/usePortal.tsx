@@ -10,10 +10,12 @@ import React, {
 
 interface ParentContextValue {
   seqs: number[]
+  closingSubject: ClosingSubject | null
 }
 
 const ParentContext = createContext<ParentContextValue>({
   seqs: [],
+  closingSubject: null,
 })
 
 let portalSeq = 0
@@ -22,6 +24,8 @@ export function usePortal() {
   const currentSeq = useMemo(() => ++portalSeq, [])
   const parent = useContext(ParentContext)
   const parentSeqs = parent.seqs.concat(currentSeq)
+
+  const currentClosingSubject = useMemo(() => new ClosingSubject(), [])
 
   const portalRoot = useMemo(() => {
     const element = document.createElement('div')
@@ -51,6 +55,7 @@ export function usePortal() {
     ({ children }) => {
       const value: ParentContextValue = {
         seqs: parentSeqs,
+        closingSubject: currentClosingSubject,
       }
       return <ParentContext.Provider value={value}>{children}</ParentContext.Provider>
     },
@@ -63,6 +68,8 @@ export function usePortal() {
     portalRoot,
     isChildPortal,
     PortalParentProvider,
+    notifyClose: useCallback(() => currentClosingSubject.notify(), [currentClosingSubject]),
+    parentClosingSubject: parent.closingSubject,
   }
 }
 
@@ -71,4 +78,18 @@ function _isChildPortal(element: HTMLElement | null, parentPortalSeq: number): b
   const childOf = element.dataset.portalChildOf || ''
   const includesSeq = childOf.split(',').includes(String(parentPortalSeq))
   return includesSeq || _isChildPortal(element.parentElement, parentPortalSeq)
+}
+
+type ClosingObserver = () => void
+class ClosingSubject {
+  private observers: ClosingObserver[] = []
+  add(observer: ClosingObserver) {
+    this.observers.push(observer)
+  }
+  remove(observer: ClosingObserver) {
+    this.observers = this.observers.filter((_observer) => _observer !== observer)
+  }
+  notify() {
+    this.observers.forEach((observer) => observer())
+  }
 }
