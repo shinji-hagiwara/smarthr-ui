@@ -1,4 +1,5 @@
 import React, { useContext } from 'react'
+import { createPortal } from 'react-dom'
 
 import { DropdownContext } from './Dropdown'
 import { DropdownContentInner } from './DropdownContentInner'
@@ -27,24 +28,27 @@ export const DropdownContent: React.FC<Props> = ({
   className = '',
   children,
 }) => {
-  const { DropdownContentRoot, active, contentWrapperId, triggerRect, onClickCloser } = useContext(
+  const { portalRoot, active, contentWrapperId, triggerRect, onClickCloser } = useContext(
     DropdownContext,
   )
 
-  return (
-    <DropdownContentRoot>
-      <DropdownContentContext.Provider value={{ onClickCloser, controllable, scrollable }}>
-        <DropdownContentInner
-          id={contentWrapperId}
-          isActive={active}
-          triggerRect={triggerRect}
-          scrollable={scrollable}
-          className={className}
-          controllable={controllable}
-        >
-          {children}
-        </DropdownContentInner>
-      </DropdownContentContext.Provider>
-    </DropdownContentRoot>
+  if (!portalRoot) {
+    return null
+  }
+
+  return createPortal(
+    <DropdownContentContext.Provider value={{ onClickCloser, controllable, scrollable }}>
+      <DropdownContentInner
+        id={contentWrapperId}
+        isActive={active}
+        triggerRect={triggerRect}
+        scrollable={scrollable}
+        className={className}
+        controllable={controllable}
+      >
+        {children}
+      </DropdownContentInner>
+    </DropdownContentContext.Provider>,
+    portalRoot,
   )
 }

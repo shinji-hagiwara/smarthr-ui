@@ -6,11 +6,9 @@ import React, {
   useCallback,
   useContext,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react'
-import { createPortal } from 'react-dom'
 
 import { Rect, getFirstTabbable, isEventFromChild } from './dropdownHelper'
 import { usePortal } from '../../hooks/usePortal'
@@ -27,7 +25,7 @@ type DropdownContextType = {
   rootTriggerRef: MutableRefObject<HTMLDivElement | null> | null
   onClickTrigger: (rect: Rect) => void
   onClickCloser: () => void
-  DropdownContentRoot: FC<{ children: ReactNode }>
+  portalRoot: HTMLElement | null
   contentWrapperId: string
 }
 
@@ -44,7 +42,7 @@ export const DropdownContext = createContext<DropdownContextType>({
   onClickCloser: () => {
     /* noop */
   },
-  DropdownContentRoot: () => null,
+  portalRoot: null,
   contentWrapperId: '',
 })
 
@@ -100,16 +98,6 @@ export const Dropdown: FC<Props> = ({ children }) => {
     }
   }, [isChildPortal, portalRoot])
 
-  // This is the root container of a dropdown content located in outside the DOM tree
-  const DropdownContentRoot = useMemo<FC<{ children: ReactNode }>>(
-    () => (props) => {
-      return createPortal(props.children, portalRoot)
-    },
-    [portalRoot],
-  )
-  // set the displayName explicit for DevTools
-  DropdownContentRoot.displayName = 'DropdownContentRoot'
-
   return (
     <PortalParentProvider>
       <DropdownContext.Provider
@@ -124,7 +112,7 @@ export const Dropdown: FC<Props> = ({ children }) => {
             if (newActive) setTriggerRect(rect)
           },
           onClickCloser: close,
-          DropdownContentRoot,
+          portalRoot,
           contentWrapperId,
         }}
       >
