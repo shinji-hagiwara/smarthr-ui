@@ -1,4 +1,4 @@
-import React, { useContext } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 import { DropdownContext } from './Dropdown'
@@ -28,11 +28,17 @@ export const DropdownContent: React.FC<Props> = ({
   className = '',
   children,
 }) => {
+  const [isFirstRendering, setIsFirstRendering] = useState(true)
   const { portalRoot, active, contentWrapperId, triggerRect, onClickCloser } = useContext(
     DropdownContext,
   )
 
-  if (!portalRoot) {
+  useEffect(() => {
+    setIsFirstRendering(false)
+  }, [])
+
+  if (!portalRoot || isFirstRendering) {
+    // do not render at the first time to put the child portal element behind the parent portal element
     return null
   }
 
