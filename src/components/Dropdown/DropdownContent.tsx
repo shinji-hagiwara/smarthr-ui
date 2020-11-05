@@ -28,14 +28,7 @@ export const DropdownContent: React.FC<Props> = ({
   className = '',
   children,
 }) => {
-  const {
-    active,
-    contentWrapperId,
-    triggerRect,
-    triggerElementRef,
-    onClickCloser,
-    setActive,
-  } = useContext(DropdownContext)
+  const { active, triggerElementRef, onClickCloser, setActive } = useContext(DropdownContext)
 
   return (
     <Portal
@@ -46,9 +39,6 @@ export const DropdownContent: React.FC<Props> = ({
     >
       <DropdownContentContext.Provider value={{ onClickCloser, controllable, scrollable }}>
         <DropdownContentInner
-          id={contentWrapperId}
-          isActive={active}
-          triggerRect={triggerRect}
           scrollable={scrollable}
           className={className}
           controllable={controllable}

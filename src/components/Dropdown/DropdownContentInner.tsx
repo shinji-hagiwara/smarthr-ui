@@ -1,16 +1,14 @@
-import React, { FC, createContext, useLayoutEffect, useRef, useState } from 'react'
+import React, { FC, createContext, useContext, useLayoutEffect, useRef, useState } from 'react'
 import styled, { css } from 'styled-components'
 
 import { Theme, useTheme } from '../../hooks/useTheme'
 
-import { ContentBoxStyle, Rect, getContentBoxStyle, getFirstTabbable } from './dropdownHelper'
+import { DropdownContext } from './Dropdown'
+import { ContentBoxStyle, getContentBoxStyle, getFirstTabbable } from './dropdownHelper'
 import { DropdownCloser } from './DropdownCloser'
 import { useKeyboardNavigation } from './useKeyboardNavigation'
 
 type Props = {
-  id: string
-  isActive: boolean
-  triggerRect: Rect
   scrollable: boolean
   children: React.ReactNode
   className: string
@@ -26,15 +24,13 @@ export const DropdownContentInnerContext = createContext<DropdownContentInnerCon
 })
 
 export const DropdownContentInner: FC<Props> = ({
-  id,
-  isActive,
-  triggerRect,
   scrollable,
   children,
   className,
   controllable,
 }) => {
   const theme = useTheme()
+  const { active, contentWrapperId, triggerRect } = useContext(DropdownContext)
   const [contentBox, setContentBox] = useState<ContentBoxStyle>({
     top: '0',
     left: '0',
@@ -65,23 +61,23 @@ export const DropdownContentInner: FC<Props> = ({
   }, [triggerRect])
 
   useLayoutEffect(() => {
-    if (isActive) {
+    if (active) {
       const firstTabbale = getFirstTabbable(wrapperRef)
       if (firstTabbale) {
         firstTabbale.focus()
       }
     }
-  }, [isActive])
+  }, [active])
 
   useKeyboardNavigation(wrapperRef)
 
   return (
     <Wrapper
-      id={id}
+      id={contentWrapperId}
       ref={wrapperRef}
       contentBox={contentBox}
       scrollable={scrollable}
-      className={`${className} ${isActive ? 'active' : ''}`}
+      className={`${className} ${active ? 'active' : ''}`}
       controllable={controllable}
       themes={theme}
     >
