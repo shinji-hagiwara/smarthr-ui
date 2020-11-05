@@ -1,8 +1,8 @@
-import React, { useContext, useEffect, useState } from 'react'
-import { createPortal } from 'react-dom'
+import React, { useContext } from 'react'
 
 import { DropdownContext } from './Dropdown'
 import { DropdownContentInner } from './DropdownContentInner'
+import { Portal } from '../Portal'
 
 export const DropdownContentContext = React.createContext<{
   onClickCloser: () => void
@@ -28,33 +28,34 @@ export const DropdownContent: React.FC<Props> = ({
   className = '',
   children,
 }) => {
-  const [isFirstRendering, setIsFirstRendering] = useState(true)
-  const { portalRoot, active, contentWrapperId, triggerRect, onClickCloser } = useContext(
-    DropdownContext,
-  )
+  const {
+    active,
+    contentWrapperId,
+    triggerRect,
+    triggerElementRef,
+    onClickCloser,
+    setActive,
+  } = useContext(DropdownContext)
 
-  useEffect(() => {
-    setIsFirstRendering(false)
-  }, [])
-
-  if (!portalRoot || isFirstRendering) {
-    // do not render at the first time to put the child portal element behind the parent portal element
-    return null
-  }
-
-  return createPortal(
-    <DropdownContentContext.Provider value={{ onClickCloser, controllable, scrollable }}>
-      <DropdownContentInner
-        id={contentWrapperId}
-        isActive={active}
-        triggerRect={triggerRect}
-        scrollable={scrollable}
-        className={className}
-        controllable={controllable}
-      >
-        {children}
-      </DropdownContentInner>
-    </DropdownContentContext.Provider>,
-    portalRoot,
+  return (
+    <Portal
+      isShown={active}
+      onClickOuter={() => setActive(false)}
+      onCloseParent={() => setActive(false)}
+      triggerRef={triggerElementRef}
+    >
+      <DropdownContentContext.Provider value={{ onClickCloser, controllable, scrollable }}>
+        <DropdownContentInner
+          id={contentWrapperId}
+          isActive={active}
+          triggerRect={triggerRect}
+          scrollable={scrollable}
+          className={className}
+          controllable={controllable}
+        >
+          {children}
+        </DropdownContentInner>
+      </DropdownContentContext.Provider>
+    </Portal>
   )
 }
