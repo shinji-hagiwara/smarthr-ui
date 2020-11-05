@@ -24,6 +24,7 @@ type DropdownContextType = {
   onClickTrigger: (rect: Rect) => void
   onClickCloser: () => void
   contentWrapperId: string
+  contentWrapperRef: MutableRefObject<HTMLDivElement | null>
   setActive: (active: boolean) => void
 }
 
@@ -41,6 +42,7 @@ export const DropdownContext = createContext<DropdownContextType>({
     /* noop */
   },
   contentWrapperId: '',
+  contentWrapperRef: React.createRef(),
   setActive: () => {
     /* noop */
   },
@@ -54,6 +56,7 @@ export const Dropdown: FC<Props> = ({ children }) => {
 
   const triggerElementRef = useRef<HTMLDivElement>(null)
   const contentWrapperId = useId()
+  const contentWrapperRef = useRef<HTMLDivElement>(null)
 
   const close = useCallback(() => {
     setActive(false)
@@ -79,10 +82,18 @@ export const Dropdown: FC<Props> = ({ children }) => {
           setActive(newActive)
           if (newActive) {
             setTriggerRect(rect)
+            requestAnimationFrame(() => {
+              // wait and focus element in content
+              const firstTabbale = getFirstTabbable(contentWrapperRef)
+              if (firstTabbale) {
+                firstTabbale.focus()
+              }
+            })
           }
         },
         onClickCloser: close,
         contentWrapperId,
+        contentWrapperRef,
         setActive,
       }}
     >

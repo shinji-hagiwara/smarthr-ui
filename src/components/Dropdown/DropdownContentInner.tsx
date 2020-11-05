@@ -1,10 +1,10 @@
-import React, { FC, createContext, useContext, useLayoutEffect, useRef, useState } from 'react'
+import React, { FC, createContext, useContext, useLayoutEffect, useState } from 'react'
 import styled, { css } from 'styled-components'
 
 import { Theme, useTheme } from '../../hooks/useTheme'
 
 import { DropdownContext } from './Dropdown'
-import { ContentBoxStyle, getContentBoxStyle, getFirstTabbable } from './dropdownHelper'
+import { ContentBoxStyle, getContentBoxStyle } from './dropdownHelper'
 import { DropdownCloser } from './DropdownCloser'
 import { useKeyboardNavigation } from './useKeyboardNavigation'
 
@@ -30,22 +30,21 @@ export const DropdownContentInner: FC<Props> = ({
   controllable,
 }) => {
   const theme = useTheme()
-  const { active, contentWrapperId, triggerRect } = useContext(DropdownContext)
+  const { active, contentWrapperId, contentWrapperRef, triggerRect } = useContext(DropdownContext)
   const [contentBox, setContentBox] = useState<ContentBoxStyle>({
     top: '0',
     left: '0',
     maxHeight: '',
   })
-  const wrapperRef = useRef<HTMLDivElement>(null)
 
   useLayoutEffect(() => {
-    if (wrapperRef.current) {
+    if (contentWrapperRef.current) {
       setContentBox(
         getContentBoxStyle(
           triggerRect,
           {
-            width: wrapperRef.current.offsetWidth,
-            height: wrapperRef.current.offsetHeight,
+            width: contentWrapperRef.current.offsetWidth,
+            height: contentWrapperRef.current.offsetHeight,
           },
           {
             width: innerWidth,
@@ -58,23 +57,14 @@ export const DropdownContentInner: FC<Props> = ({
         ),
       )
     }
-  }, [triggerRect])
+  }, [contentWrapperRef, triggerRect])
 
-  useLayoutEffect(() => {
-    if (active) {
-      const firstTabbale = getFirstTabbable(wrapperRef)
-      if (firstTabbale) {
-        firstTabbale.focus()
-      }
-    }
-  }, [active])
-
-  useKeyboardNavigation(wrapperRef)
+  useKeyboardNavigation(contentWrapperRef)
 
   return (
     <Wrapper
       id={contentWrapperId}
-      ref={wrapperRef}
+      ref={contentWrapperRef}
       contentBox={contentBox}
       scrollable={scrollable}
       className={`${className} ${active ? 'active' : ''}`}
